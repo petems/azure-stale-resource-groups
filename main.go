@@ -206,7 +206,7 @@ func initConfig() {
 	if config.AccessToken == "" {
 		log.Fatal("Access token is required. Set via --access-token flag or AZURE_ACCESS_TOKEN environment variable")
 	}
-	
+
 	// Validate concurrency configuration to prevent hanging
 	config.MaxConcurrency = validateConcurrency(config.MaxConcurrency)
 
@@ -530,10 +530,10 @@ func (ac *AzureClient) processResourceGroupsConcurrentlyWithResources(resourceGr
 // printResourceGroupResult prints the result of processing a resource group
 func (ac *AzureClient) printResourceGroupResult(result ResourceGroupResult, listResources bool) {
 	rg := result.ResourceGroup
-	
+
 	// Check if this is a default resource group
 	defaultInfo := checkIfDefaultResourceGroup(rg.Name)
-	
+
 	if ac.Config.Porcelain {
 		// Porcelain mode: compact, single-line format for scripts
 		createdTime := ""
@@ -544,17 +544,17 @@ func (ac *AzureClient) printResourceGroupResult(result ResourceGroupResult, list
 		} else {
 			createdTime = "N/A"
 		}
-		
+
 		isDefault := "false"
 		if defaultInfo.IsDefault {
 			isDefault = "true"
 		}
-		
-		fmt.Printf("%s\t%s\t%s\t%s\t%s\n", 
-			rg.Name, 
-			rg.Location, 
-			rg.Properties.ProvisioningState, 
-			createdTime, 
+
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\n",
+			rg.Name,
+			rg.Location,
+			rg.Properties.ProvisioningState,
+			createdTime,
 			isDefault)
 	} else {
 		// Human-readable format
@@ -669,14 +669,14 @@ func (ac *AzureClient) listResourcesInGroup(resourceGroupName string) error {
 
 // CSV Row structure for output
 type CSVRow struct {
-	ResourceGroupName        string
-	Location                 string
-	ProvisioningState        string
-	CreatedTime              string
-	IsDefault                string
-	CreatedBy                string
-	Description              string
-	Resources                string
+	ResourceGroupName string
+	Location          string
+	ProvisioningState string
+	CreatedTime       string
+	IsDefault         string
+	CreatedBy         string
+	Description       string
+	Resources         string
 }
 
 // processResourceGroupsConcurrentlyCSV processes resource groups concurrently and returns CSV data
@@ -813,10 +813,10 @@ func (ac *AzureClient) fetchResourcesInGroup(resourceGroupName string) ([]Resour
 // convertToCSVRow converts a ResourceGroupResult to a CSVRow
 func (ac *AzureClient) convertToCSVRow(result ResourceGroupResult, listResources bool, resources []Resource) CSVRow {
 	rg := result.ResourceGroup
-	
+
 	// Check if this is a default resource group
 	defaultInfo := checkIfDefaultResourceGroup(rg.Name)
-	
+
 	// Format created time
 	createdTimeStr := ""
 	if result.Error != nil {
@@ -858,10 +858,10 @@ func (ac *AzureClient) convertToCSVRow(result ResourceGroupResult, listResources
 // printResourceGroupResultWithResources prints a resource group result with resources
 func (ac *AzureClient) printResourceGroupResultWithResources(result ResourceGroupResult, resources []Resource) {
 	rg := result.ResourceGroup
-	
+
 	// Check if this is a default resource group
 	defaultInfo := checkIfDefaultResourceGroup(rg.Name)
-	
+
 	if ac.Config.Porcelain {
 		// For porcelain mode, we need to get creation time from resources
 		createdTime := ""
@@ -883,17 +883,17 @@ func (ac *AzureClient) printResourceGroupResultWithResources(result ResourceGrou
 		} else {
 			createdTime = "N/A"
 		}
-		
+
 		isDefault := "false"
 		if defaultInfo.IsDefault {
 			isDefault = "true"
 		}
-		
-		fmt.Printf("%s\t%s\t%s\t%s\t%s\n", 
-			rg.Name, 
-			rg.Location, 
-			rg.Properties.ProvisioningState, 
-			createdTime, 
+
+		fmt.Printf("%s\t%s\t%s\t%s\t%s\n",
+			rg.Name,
+			rg.Location,
+			rg.Properties.ProvisioningState,
+			createdTime,
 			isDefault)
 	} else {
 		// Human-readable format
@@ -939,7 +939,12 @@ func (ac *AzureClient) writeCSVFile(csvData []CSVRow) error {
 	}()
 
 	writer := csv.NewWriter(file)
-	defer writer.Flush()
+	defer func() {
+		writer.Flush()
+		if err := writer.Error(); err != nil {
+			log.Printf("Warning: failed to flush CSV writer: %v", err)
+		}
+	}()
 
 	// Write header
 	header := []string{
